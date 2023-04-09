@@ -55,11 +55,6 @@ def broadcast(client, message, number_connect):
 		client_data.send(message)
 
 		print("[ЛОГ] Новое сообщение отправлено")
-	else:
-		print(f"[ЛОГ] Пользователь  не подключен к линии связи.")
-
-		data = "Пользователь  не подключен к линии связи. Попробуйте позже."
-		client.send(data.encode("utf-8"))
 
 def receive_file_size(sck: socket.socket):
 	fmt = "<Q"
