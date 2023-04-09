@@ -12,7 +12,7 @@ import threading
 status = True
 
 ip = "94.250.251.14"
-port = 5072
+port = 5075
 
 check_dir_keys = os.path.isdir("keys")
 check_file_public_key = os.path.isfile("keys/public_key.pem")
@@ -51,12 +51,7 @@ if check_file_public_key == True and check_file_private_key == True:
 
 	print("Keys have been successfully generated!")
 
-	file = open("keys/public_key.pem")
-	public_key_data = file.read()
-	public_key = rsa.PublicKey.load_pkcs1(public_key_data)
-	file.close()
-
-	file = open("keys/private_key.pem")
+	file = open("keys/private_key.pem", "rb")
 	private_key_data = file.read()
 	private_key = rsa.PrivateKey.load_pkcs1(private_key_data)
 	file.close()
@@ -87,7 +82,7 @@ elif check_file_public_key == False and check_file_private_key == False:
 
 	print("Keys have been successfully generated!")
 
-	file = open("keys/private_key.pem")
+	file = open("keys/private_key.pem", "rb")
 	private_key_data = file.read()
 	private_key = rsa.PrivateKey.load_pkcs1(private_key_data)
 	file.close()
@@ -95,9 +90,6 @@ elif check_file_public_key == False and check_file_private_key == False:
 os.system("cls")
 
 print("Private Security Communication")
-print("")
-
-number_connect = input("Enter the number of the subscriber you want to connect to: ")
 print("")
 
 def receive_file_size(sck: socket.socket):
@@ -198,6 +190,8 @@ print("Connecting..")
 
 client.send("REQUEST=CONNECT".encode("utf-8"))
 
+print("Authorization..")
+
 message = client.recv(1024).decode("utf-8")
 
 if message == "REQUEST=ERROR_AUTH":
@@ -209,7 +203,13 @@ if message == "REQUEST=ERROR_AUTH":
 
 	sys.exit()
 
-number = message[8:11]
+print("Succesful authorization!")
+
+number = message[8:13]
+
+print("Your number: " + number)
+
+number_connect = input("Enter the number of the subscriber you want to connect to: ")
 
 message = client.recv(1024).decode("utf-8")
 
@@ -236,7 +236,7 @@ receive_file(client, "keys/public_key.pem")
 
 print("Connection found!")
 
-file = open("keys/public_key.pem")
+file = open("keys/public_key.pem", "rb")
 public_key_data = file.read()
 public_key = rsa.PublicKey.load_pkcs1(public_key_data)
 file.close()
