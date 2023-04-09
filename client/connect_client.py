@@ -11,7 +11,7 @@ import threading
 
 status = True
 
-ip = "192.168.0.100"
+ip = "94.250.251.14"
 port = 5072
 
 check_dir_keys = os.path.isdir("keys")
