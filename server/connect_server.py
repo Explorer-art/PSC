@@ -8,17 +8,15 @@ import socket
 import struct
 import threading
 
-ip = "94.250.251.14"
+ip = "192.168.0.100"
 port = 5072
 
-number_maximum_lenght = 5
+number_maximum_lenght = 10
 
 welcome_message_status = False
 welcome_message = "Welcome!\n"
 
 allowed_ip = []
-
-black_list_ip = []
 
 numbers = []
 
@@ -76,7 +74,30 @@ def send_file(sck: socket.socket, filename):
 		while read_bytes := file.read(1024):
 			sck.sendall(read_bytes)
 
-def handle(client, address, number, number_connect):
+def handle(client, address, number):
+	client.send("REQUEST=NUMBER_CONNECT".encode("utf-8"))
+
+	message = client.recv(1024).decode("utf-8")
+
+	number_lenght = len(message)
+
+	if number_lenght == number_maximum_lenght:
+		number_connect = message
+	else:
+		client.send("REQUEST=ERROR_VERY_LONG_USERNAME".encode("utf-8"))
+
+		print("[LOG] The number is too long " + str(address))
+
+		print("[LOG] " + str(address) + " kicked")
+
+		client.close()
+
+	client.send("REQUEST=PUBLIC_KEY".encode("utf-8"))
+
+	filename = "temp/" + number_connect + ".pem"
+
+	receive_file(client, filename)
+	
 	n = True
 	while n == True:
 		if os.path.isfile("temp/" + number + ".pem") == True:
@@ -166,32 +187,9 @@ while True:
 	elif address[0] in allowed_ip:
 		print(f"[LOG] User {address} succesful auth!")
 
-	number = str(random.randit(10000, 99999))
+	number = str(random.randint(1000000000, 9999999999))
 
 	data = "REQUEST=" + number
 	client.send(data.encode("utf-8"))
 
-	client.send("REQUEST=NUMBER_CONNECT".encode("utf-8"))
-
-	message = client.recv(1024).decode("utf-8")
-
-	number_lenght = len(message)
-
-	if number_lenght == number_maximum_lenght:
-		number_connect = message
-	else:
-		client.send("REQUEST=ERROR_VERY_LONG_USERNAME".encode("utf-8"))
-
-		print("[LOG] The number is too long " + str(address))
-
-		print("[LOG] " + str(address) + " kicked")
-
-		client.close()
-
-	client.send("REQUEST=PUBLIC_KEY".encode("utf-8"))
-
-	filename = "temp/" + number_connect + ".pem"
-
-	receive_file(client, filename)
-
-	threading.Thread(target=handle, args=(client, address, number, number_connect,)).start()
+	threading.Thread(target=handle, args=(client, address, number,)).start()
