@@ -3,6 +3,7 @@
 
 import os
 import sys
+import random
 import socket
 import struct
 import threading
@@ -10,9 +11,7 @@ import threading
 ip = "94.250.251.14"
 port = 5072
 
-number_maximum_lenght = 3
-
-number_r = 0 # Для тестирования
+number_maximum_lenght = 5
 
 welcome_message_status = False
 welcome_message = "Welcome!\n"
@@ -30,14 +29,6 @@ lines = file.readlines()
 
 for line in lines:
 	allowed_ip.append(line.strip())
-
-file.close()
-
-file = open("black_list_ip.txt", "r")
-lines = file.readlines()
-
-for line in lines:
-	black_list_ip.append(line.strip())
 
 file.close()
 
@@ -175,11 +166,7 @@ while True:
 	elif address[0] in allowed_ip:
 		print(f"[LOG] User {address} succesful auth!")
 
-	if address[0] == "192.168.0.100":
-		number_r = number_r + 1
-		number = "00" + str(number_r)
-	#elif address[0] == "192.168.0.150":
-	#	number = "001"
+	number = str(random.randit(10000, 99999))
 
 	data = "REQUEST=" + number
 	client.send(data.encode("utf-8"))
