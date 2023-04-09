@@ -7,7 +7,7 @@ import socket
 import struct
 import threading
 
-ip = "192.168.0.100"
+ip = "94.250.251.14"
 port = 5072
 
 number_maximum_lenght = 3
@@ -56,9 +56,9 @@ def broadcast(client, message, number_connect):
 
 		print("[ЛОГ] Новое сообщение отправлено")
 	else:
-		print(f"[ЛОГ] Пользователь {username_connect} не подключен к линии связи.")
+		print(f"[ЛОГ] Пользователь  не подключен к линии связи.")
 
-		data = "Пользователь " + username_connect + " не подключен к линии связи. Попробуйте позже."
+		data = "Пользователь  не подключен к линии связи. Попробуйте позже."
 		client.send(data.encode("utf-8"))
 
 def receive_file_size(sck: socket.socket):
