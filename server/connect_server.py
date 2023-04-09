@@ -15,7 +15,7 @@ number_maximum_lenght = 3
 number_r = 0 # Для тестирования
 
 welcome_message_status = False
-welcome_message = "Добро пожаловать!\n"
+welcome_message = "Welcome!\n"
 
 allowed_ip = []
 
@@ -41,20 +41,13 @@ for line in lines:
 
 file.close()
 
-def broadcast_b(message, client_sender):
-	for client in clients:
-		if client != client_sender:
-			client.send(message)
-
-			print("[ЛОГ] Новое сообщение отправлено")
-
 def broadcast(client, message, number_connect):
 	if number_connect in numbers:
 		number_connect_index = numbers.index(number_connect)
 		client_data = clients[number_connect_index]
 		client_data.send(message)
 
-		print("[ЛОГ] Новое сообщение отправлено")
+		print("[LOG] Send new message")
 
 def receive_file_size(sck: socket.socket):
 	fmt = "<Q"
@@ -106,21 +99,21 @@ def handle(client, address, number, number_connect):
 		numbers.append(number)
 		clients.append(client)
 
-		print(f"[ЛОГ] Пользователь {number} {address} успешно подключен к защищённой линии связи!")
+		print(f"[LOG] User {number} {address} connected to PSC!")
 
 		if welcome_message_status == True:
 			data = "REQUEST=WELCOME_MESSAGE:" + welcome_message
 			client.send(data.encode("utf-8"))
 
-			print(f"[ЛОГ] Пользователю {number} {address} отправлено приветственное сообщение {welcome_message}")
+			print(f"[LOG] User {number} {address} sended  welcome message {welcome_message}")
 		else:
 			client.send("REQUEST=NOT_WELCOME_MESSAGE".encode("utf-8"))
 	else:
-		print(f"[ОШИБКА] Ошибка при подтверждении подключения пользователя {address}")
+		print(f"[ERROR] Error confirm user {address}")
 
 		client.send("REQUEST=ERROR_NO_CONFIRM_CONNECT".encode("utf-8"))
 
-		print("[ЛОГ] " + str(address) + " отключен")
+		print("[LOG] " + str(address) + " kicked")
 
 		client.close()
 
@@ -137,50 +130,50 @@ def handle(client, address, number, number_connect):
 				number = numbers[number_index]
 				numbers.pop(number_index)
 
-				print(f"[ЛОГ] Пользователь {number} вышел")
+				print(f"[LOG] User {number} disable")
 
 				client.close()
 
 				os.remove("temp/" + number + ".pem")
 			else:
-				print("[ЛОГ] Получено новое сообщение")
+				print("[LOG] A new message has been received")
 
 				broadcast(client, message, number_connect)
 		except:
-			print("[ЛОГ] Пользователь отключен")
+			print(f"[LOG] User {address} kicked")
 			client.close()
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind((ip, port))
 server.listen()
 
-print("[ИНФО] Сервер включен!")
+print("[INFO] Server started!")
 
-print("[ИНФО] Айпи: " + ip)
-print("[ИНФО] Порт: " + str(port))
+print("[INFO] IP: " + ip)
+print("[INFO] PORT: " + str(port))
 
 while True:
 	client, address = server.accept()
 
-	print("[ЛОГ] Подключился " + str(address))
+	print("[LOG] Connected " + str(address))
 
 	message = client.recv(1024).decode("utf-8")
 
 	if message != "REQUEST=CONNECT":
-		print(f"[ЛОГ] Пользователь {address} отключился")
+		print(f"[LOG] user {address} kicked")
 
 		client.close()
 
 	if address[0] not in allowed_ip:
-		print(f"[ОШИБКА] Пользователь {address} не найден в списке разрешённых IP!")
+		print(f"[ERROR] User {address} not found in the list of allowed IP addresses!")
 
 		client.send("REQUEST=ERROR_AUTH".encode("utf-8"))
 
-		print("[ЛОГ] Пользователь " + str(address) + " отключен")
+		print("[LOG] User " + str(address) + " kicked")
 
 		client.close()
 	elif address[0] in allowed_ip:
-		print(f"[ЛОГ] Пользователь {address} успешно авторизировался!")
+		print(f"[LOG] User {address} succesful auth!")
 
 	if address[0] == "192.168.0.100":
 		number_r = number_r + 1
@@ -202,9 +195,9 @@ while True:
 	else:
 		client.send("REQUEST=ERROR_VERY_LONG_USERNAME".encode("utf-8"))
 
-		print("[ЛОГ] Слишком длинный номер " + str(address))
+		print("[LOG] The number is too long " + str(address))
 
-		print("[ЛОГ] " + str(address) + " отключен")
+		print("[LOG] " + str(address) + " kicked")
 
 		client.close()
 
