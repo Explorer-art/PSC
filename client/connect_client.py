@@ -11,8 +11,8 @@ import threading
 
 status = True
 
-ip = "94.250.251.14"
-port = 5075
+ip = "192.168.0.100"
+port = 5072
 
 check_dir_keys = os.path.isdir("keys")
 check_file_public_key = os.path.isfile("keys/public_key.pem")
@@ -91,6 +91,8 @@ os.system("cls")
 
 print("Private Security Communication")
 print("")
+
+nickname = input("Enter your nickname: ")
 
 def receive_file_size(sck: socket.socket):
 	fmt = "<Q"
@@ -173,7 +175,7 @@ def writer(client):
 			sys.exit()
 
 		if message != "":
-			message = number + " > " + message
+			message = nickname + " > " + message
 
 		print(message)
 
@@ -205,7 +207,7 @@ if message == "REQUEST=ERROR_AUTH":
 
 print("Succesful authorization!")
 
-number = message[8:13]
+number = message[8:18]
 
 print("Your number: " + number)
 
@@ -249,7 +251,7 @@ os.system("cls")
 
 print("Private Security Communication")
 print("")
-print("Your number:" + number)
+print("Your number: " + number)
 print("")
 print("")
 
