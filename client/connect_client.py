@@ -27,7 +27,7 @@ if check_file_public_key == True and check_file_private_key == True:
 
 	(public_key, private_key) = rsa.newkeys(512)
 
-	print("Генерация публичного ключа..")
+	print("Generating a public key..")
 
 	public_key_data = public_key.save_pkcs1()
 
@@ -35,9 +35,9 @@ if check_file_public_key == True and check_file_private_key == True:
 	file.write(public_key_data)
 	file.close()
 
-	print("Публичный ключ сгенерирован")
+	print("Public key generated")
 
-	print("Генерация приватного ключа..")
+	print("Private key generation..")
 
 	private_key_data = private_key.save_pkcs1()
 
@@ -45,11 +45,11 @@ if check_file_public_key == True and check_file_private_key == True:
 	file.write(private_key_data)
 	file.close()
 
-	print("Приватный ключ сгенерирован")
+	print("Private key generated")
 
 	print("")
 
-	print("Ключи успешно сгенерированы!")
+	print("Keys have been successfully generated!")
 
 	file = open("keys/public_key.pem")
 	public_key_data = file.read()
@@ -63,7 +63,7 @@ if check_file_public_key == True and check_file_private_key == True:
 elif check_file_public_key == False and check_file_private_key == False:
 	(public_key, private_key) = rsa.newkeys(512)
 
-	print("Генерация публичного ключа..")
+	print("Generating a public key..")
 
 	public_key_data = public_key.save_pkcs1()
 
@@ -71,9 +71,9 @@ elif check_file_public_key == False and check_file_private_key == False:
 	file.write(public_key_data)
 	file.close()
 
-	print("Публичный ключ сгенерирован")
+	print("Public key generated")
 
-	print("Генерация приватного ключа..")
+	print("Private key generation..")
 
 	private_key_data = private_key.save_pkcs1()
 
@@ -81,11 +81,11 @@ elif check_file_public_key == False and check_file_private_key == False:
 	file.write(private_key_data)
 	file.close()
 
-	print("Приватный ключ сгенерирован")
+	print("Private key generated")
 
 	print("")
 
-	print("Ключи успешно сгенерированы!")
+	print("Keys have been successfully generated!")
 
 	file = open("keys/private_key.pem")
 	private_key_data = file.read()
@@ -94,10 +94,10 @@ elif check_file_public_key == False and check_file_private_key == False:
 
 os.system("cls")
 
-print("Защищённая линия связи")
+print("Private Security Communication")
 print("")
 
-number_connect = input("Введите номер абонента к которому вы хотите подключиться: ")
+number_connect = input("Enter the number of the subscriber you want to connect to: ")
 print("")
 
 def receive_file_size(sck: socket.socket):
@@ -155,15 +155,15 @@ def receive(client):
 def writer(client):
 	global status
 	while status == True:
-		message = input("\nВведите сообщение: ")
+		message = input("\nEnter a message: ")
 
 		if message == "!info":
-			print("Информация:")
-			print("Версия: 1.0")
-			print("Автор: Truzme_")
+			print("Information:\n")
+			print("Author: Truzme_")
+			print("version: 1.0")
 			print("")
 		elif message == "!exit":
-			print("Отключение..")
+			print("Exit..")
 
 			client.send("REQUEST=EXIT".encode("utf-8"))
 
@@ -174,7 +174,7 @@ def writer(client):
 			os.remove("keys/public_key.pem")
 			os.remove("keys/private_key.pem")
 
-			print("Выход..")
+			print("Exit..")
 
 			os.system("cls")
 
@@ -194,14 +194,14 @@ def writer(client):
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect((ip, port))
 
-print("Подключение..")
+print("Connecting..")
 
 client.send("REQUEST=CONNECT".encode("utf-8"))
 
 message = client.recv(1024).decode("utf-8")
 
 if message == "REQUEST=ERROR_AUTH":
-	print("Ошибка! Авторизация не пройдена.")
+	print("Error! Authorization failed.")
 
 	client.close()
 
@@ -222,7 +222,7 @@ message = client.recv(1024).decode("utf-8")
 if message == "REQUEST=PUBLIC_KEY":
 	send_file(client, "keys/public_key.pem")
 elif message == "REQUEST=ERROR_VERY_LONG_USERNAME":
-	print("Ошибка! Слишком длинный номер.")
+	print("Error! The number is too long.")
 
 	client.close()
 
@@ -230,11 +230,11 @@ elif message == "REQUEST=ERROR_VERY_LONG_USERNAME":
 
 	sys.exit()
 
-print("Ожидание подключения..")
+print("Waiting for connection..")
 
 receive_file(client, "keys/public_key.pem")
 
-print("Подлючение найдено!")
+print("Connection found!")
 
 file = open("keys/public_key.pem")
 public_key_data = file.read()
@@ -242,14 +242,14 @@ public_key = rsa.PublicKey.load_pkcs1(public_key_data)
 file.close()
 
 client.send("REQUEST=OKAY".encode("utf-8"))
-print("Успешное подключение!")
+print("Successful connection!")
 time.sleep(2)
 
 os.system("cls")
 
-print("Защищённая линия связи")
+print("Private Security Communication")
 print("")
-print("Ваш номер: " + number)
+print("Your number:" + number)
 print("")
 print("")
 
