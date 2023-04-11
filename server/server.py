@@ -8,7 +8,7 @@ import socket
 import struct
 import threading
 
-ip = "192.168.0.100"
+ip = "94.250.251.14"
 port = 5072
 
 number_maximum_lenght = 10
@@ -24,6 +24,8 @@ banned_ip = []
 numbers = []
 
 clients = []
+
+addresses = []
 
 usernames = []
 
@@ -81,14 +83,13 @@ def handle(client, address, number): #Пользователь
 
 		numbers_connect.append(number_connect)
 	else:
-		client.send("REQUEST=ERROR_VERY_LONG_NUMBER".encode("utf-8"))
+		client.send("REQUEST=ERROR_VERY_LONG_OR_SHORT_NUMBER".encode("utf-8"))
 
-		print("[LOG] The number is too long " + str(address))
+		print("[LOG] The number is too long or short " + str(address))
 
 		print("[LOG] " + str(address) + " kicked")
 
 		client.close()
-		numbers_connect.remove(number)
 
 	client.send("REQUEST=USERNAME".encode("utf-8"))
 
@@ -99,9 +100,9 @@ def handle(client, address, number): #Пользователь
 	if username_lenght <= number_maximum_lenght: #Проверка длины имени пользователя
 		username = message
 	else:
-		client.send("REQUEST=ERROR_VERY_LONG_USERNAME".encode("utf-8"))
+		client.send("REQUEST=ERROR_VERY_LONG_OR_SHORT_USERNAME".encode("utf-8"))
 
-		print("[LOG] The username is too long " + str(address))
+		print("[LOG] The username is too long or short " + str(address))
 
 		print("[LOG] " + str(address) + " kicked")
 
@@ -124,6 +125,7 @@ def handle(client, address, number): #Пользователь
 	if message == "REQUEST=OKAY":
 		numbers.append(number)
 		clients.append(client)
+		addresses.append(address[0])
 		usernames.append(username)
 
 		print(f"[LOG] User {number} {address} connected to PSC!")
@@ -158,16 +160,18 @@ def handle(client, address, number): #Пользователь
 				print("[LOG] User " + str(number) + " (" + str(address[0]) + ":" + str(address[1]) + ") leave")
 
 				client.close()
+				numbers.remove(number)
 				numbers_connect.remove(number)
 				break
 			else:
 				send_message(client, message, number_connect)
 				
-				print("[LOG] " + str(number) + " (" + str(address[0]) + ":" + str(address[1]) + ") " + message)
+				print("[LOG] User " + str(number) + " (" + str(address[0]) + ":" + str(address[1]) + ") send " + number_connect + " message: " + message)
 		except:
 			print("[LOG] User " + str(number) + " (" + str(address[0]) + ":" + str(address[1]) + ") leave")
 
 			client.close()
+			numbers.remove(number)
 			numbers_connect.remove(number)
 			break
 
@@ -189,7 +193,6 @@ while True: #Основной цикл сервера
 
 	if message != "REQUEST=CONNECT":
 		print(f"[LOG] User {address} kicked")
-
 		client.close()
 
 	if address[0] in banned_ip:
@@ -198,7 +201,6 @@ while True: #Основной цикл сервера
 		client.send("REQUEST=BANNED".encode("utf-8"))
 
 		print("[LOG] User " + str(address) + " kicked")
-
 		client.close()
 
 	if address[0] not in allowed_ip:
@@ -207,17 +209,30 @@ while True: #Основной цикл сервера
 		client.send("REQUEST=ERROR_AUTH".encode("utf-8"))
 
 		print("[LOG] User " + str(address) + " kicked")
-
 		client.close()
 	elif address[0] in allowed_ip:
 		print(f"[LOG] User {address} succesful auth!")
+
+	elif address[0] in addresses:
+		print(f"[ERROR] User {address} already connected.")
+
+		client.send("REQUEST=ALREADY_CONNECTED".encode("utf-8"))
+
+		print("[LOG] User " + str(address) + " kicked")
+		client.close()
 
 	client.send("REQUEST=SUCCESFUL_AUTH".encode("utf-8"))
 
 	message = client.recv(1024).decode("utf-8")
 
 	if message == "REQUEST=NUMBER":
-		number = str(random.randint(1000000000, 9999999999)) #Генерация номера пользователя
+		s = True
+
+		while s == True:
+			number = str(random.randint(1000000000, 9999999999)) #Генерация номера пользователя
+
+			if number not in numbers:
+				s = False
 
 		data = "REQUEST=" + number
 		client.send(data.encode("utf-8"))
