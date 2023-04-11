@@ -12,6 +12,7 @@ ip = "192.168.0.100"
 port = 5072
 
 number_maximum_lenght = 10
+username_maximum_lenght = 50
 
 welcome_message_status = False
 welcome_message = "Welcome!\n"
@@ -23,6 +24,10 @@ banned_ip = []
 numbers = []
 
 clients = []
+
+usernames = []
+
+numbers_connect = []
 
 file = open("allowed_ip.txt", "r")
 lines = file.readlines()
@@ -56,51 +61,13 @@ def send_message(client, message, number_connect): #Отправка сообщ�
 	if number_connect in numbers:
 		number_connect_index = numbers.index(number_connect)
 		client_data = clients[number_connect_index]
-		client_data.send(message)
-
-		print("[LOG] Sended new message")
+		client_data.send(message.encode("utf-8"))
 
 def broadcast(message): #Отправка сообщения всем пользователям
 	for client in clients:
 		client.send(message.encode("utf-8"))
 
 	print("[LOG] Broadcast message sended")
-
-def receive_file_size(sck: socket.socket): #Определение размера передоваемого файла
-	fmt = "<Q"
-	expected_bytes = struct.calcsize(fmt)
-	received_bytes = 0
-	stream = bytes()
-
-	while received_bytes < expected_bytes:
-		chunk = sck.recv(expected_bytes - received_bytes)
-		stream += chunk
-		received_bytes += len(chunk)
-
-	filesize = struct.unpack(fmt, stream)[0]
-
-	return filesize
-
-def receive_file(sck: socket.socket, filename): #Принятие передоваемого файла
-	file_size = receive_file_size(sck)
-
-	with open(filename, "wb") as file:
-		received_bytes = 0
-
-		while received_bytes < file_size:
-			chunk = sck.recv(1024)
-
-			if chunk:
-				file.write(chunk)
-				received_bytes += len(chunk)
-
-def send_file(sck: socket.socket, filename): #Отправка файла
-	filesize = os.path.getsize(filename)
-	sck.sendall(struct.pack("<Q", filesize))
-
-	with open(filename, "rb") as file:
-		while read_bytes := file.read(1024):
-			sck.sendall(read_bytes)
 
 def handle(client, address, number): #Пользователь
 	client.send("REQUEST=NUMBER_CONNECT".encode("utf-8"))
@@ -109,35 +76,55 @@ def handle(client, address, number): #Пользователь
 
 	number_lenght = len(message)
 
-	if number_lenght == number_maximum_lenght:
+	if number_lenght == number_maximum_lenght: #Проверка длины номера
 		number_connect = message
+
+		numbers_connect.append(number_connect)
 	else:
-		client.send("REQUEST=ERROR_VERY_LONG_USERNAME".encode("utf-8"))
+		client.send("REQUEST=ERROR_VERY_LONG_NUMBER".encode("utf-8"))
 
 		print("[LOG] The number is too long " + str(address))
 
 		print("[LOG] " + str(address) + " kicked")
 
 		client.close()
+		numbers_connect.remove(number)
 
-	client.send("REQUEST=PUBLIC_KEY".encode("utf-8"))
+	client.send("REQUEST=USERNAME".encode("utf-8"))
 
-	filename = "temp/" + number_connect + ".pem"
+	username = client.recv(1024).decode("utf-8")
 
-	receive_file(client, filename)
-	
+	username_lenght = len(message)
+
+	if username_lenght <= number_maximum_lenght: #Проверка длины имени пользователя
+		username = message
+	else:
+		client.send("REQUEST=ERROR_VERY_LONG_USERNAME".encode("utf-8"))
+
+		print("[LOG] The username is too long " + str(address))
+
+		print("[LOG] " + str(address) + " kicked")
+
+		client.close()
+		numbers_connect.remove(number)
+
+	client.send("REQUEST=WAITING".encode("utf-8"))
+
 	n = True
+
 	while n == True:
-		if os.path.isfile("temp/" + number + ".pem") == True:
-			send_file(client, "temp/" + number + ".pem")
-			
-			n = False
+		if number in numbers_connect:
+			if number_connect in numbers_connect:
+				client.send("REQUEST=SUCCESFUL_CONNECT".encode("utf-8"))
+
+				n = False
 
 	message = client.recv(1024).decode("utf-8")
 
 	if message == "REQUEST=OKAY":
 		numbers.append(number)
 		clients.append(client)
+		usernames.append(username)
 
 		print(f"[LOG] User {number} {address} connected to PSC!")
 
@@ -149,43 +136,39 @@ def handle(client, address, number): #Пользователь
 		else:
 			client.send("REQUEST=NOT_WELCOME_MESSAGE".encode("utf-8"))
 	else:
-		print(f"[ERROR] Error confirm user {address}")
+		print(f"[ERROR] No confirm user {address}")
 
 		client.send("REQUEST=ERROR_NO_CONFIRM_CONNECT".encode("utf-8"))
 
 		print("[LOG] " + str(address) + " kicked")
 
 		client.close()
-		os.remove("temp/" + number + ".pem")
+		numbers_connect.remove(number)
 
 	while True:
 		try:
-			message = client.recv(1024)
-			print(message)
+			message = client.recv(1024).decode("utf-8")
 
-			request = message.decode("utf-8", "replace")
-
-			if request == "REQUEST=EXIT":
+			if message == "REQUEST=EXIT":
 				number_index = clients.index(client)
 				clients.remove(client)
 				number = numbers[number_index]
 				numbers.pop(number_index)
 
-				print(f"[LOG] User {number} disable")
+				print("[LOG] User " + str(number) + " (" + str(address[0]) + ":" + str(address[1]) + ") leave")
 
 				client.close()
-
-				os.remove("temp/" + number + ".pem")
-
+				numbers_connect.remove(number)
 				break
 			else:
-				print("[LOG] A new message has been received")
-
 				send_message(client, message, number_connect)
+				
+				print("[LOG] " + str(number) + " (" + str(address[0]) + ":" + str(address[1]) + ") " + message)
 		except:
-			print(f"[LOG] User {address} kicked")
+			print("[LOG] User " + str(number) + " (" + str(address[0]) + ":" + str(address[1]) + ") leave")
+
 			client.close()
-			os.remove("temp/" + number + ".pem")
+			numbers_connect.remove(number)
 			break
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -229,9 +212,14 @@ while True: #Основной цикл сервера
 	elif address[0] in allowed_ip:
 		print(f"[LOG] User {address} succesful auth!")
 
-	number = str(random.randint(1000000000, 9999999999)) #Генерация номера пользователя
+	client.send("REQUEST=SUCCESFUL_AUTH".encode("utf-8"))
 
-	data = "REQUEST=" + number
-	client.send(data.encode("utf-8"))
+	message = client.recv(1024).decode("utf-8")
 
-	threading.Thread(target=handle, args=(client, address, number,)).start()
+	if message == "REQUEST=NUMBER":
+		number = str(random.randint(1000000000, 9999999999)) #Генерация номера пользователя
+
+		data = "REQUEST=" + number
+		client.send(data.encode("utf-8"))
+
+		threading.Thread(target=handle, args=(client, address, number,)).start()
