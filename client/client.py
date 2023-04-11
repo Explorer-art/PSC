@@ -11,7 +11,7 @@ import threading
 
 status = True
 
-ip = "192.168.0.100"
+ip = "94.250.251.14"
 port = 5072
 
 os.system("cls")
@@ -95,6 +95,14 @@ if message == "REQUEST=ERROR_AUTH":
 	status = False
 
 	sys.exit()
+elif message == "REQUEST=ALREADY_CONNECTED":
+	print("Ошибка! Вы уже подключены к системе!")
+
+	client.close()
+
+	status == False
+
+	sts.exit()
 elif message == "REQUEST=SUCCESFUL_AUTH":
 	print("Авторизация успешно пройдена!")
 
@@ -115,8 +123,8 @@ if message == "REQUEST=NUMBER_CONNECT":
 
 message = client.recv(1024).decode("utf-8")
 
-if message == "REQUEST=ERROR_VERY_LONG_NUMBER":
-	print("Ошибка! Слишком длинный номер.")
+if message == "REQUEST=ERROR_VERY_LONG_OR_SHORT_NUMBER":
+	print("Ошибка! Слишком длинный или короткий номер.")
 
 	client.close()
 
@@ -128,8 +136,8 @@ elif message == "REQUEST=USERNAME":
 
 message = client.recv(1024).decode("utf-8")
 
-if message == "REQUEST=ERROR_VERY_LONG_USERNAME":
-	print("Ошибка! Слишком длинное имя пользователя.")
+if message == "REQUEST=ERROR_VERY_LONG_OR_SHORT_USERNAME":
+	print("Ошибка! Слишком длинное или короткое имя пользователя.")
 
 	client.close()
 
