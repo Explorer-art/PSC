@@ -11,8 +11,8 @@ import threading
 
 status = True
 
-ip = "94.250.251.14"
-port = 5072
+ip_dns = "94.250.251.14"
+port_dns = 25000
 
 os.system("cls")
 
@@ -20,6 +20,51 @@ print("Защищённая линия связи")
 print("")
 
 username = input("Введите имя пользователя: ")
+host = input("Введите айпи адрес или доменное имя сервера к которому вы хотите подключится: ")
+
+for s in host: #Проверка это айпи адрес или доменное имя сервера
+	if s == ":":
+		ip_connect = True
+
+if ip_connect == True:
+	n = True
+
+	for s in host:
+		if s == ":":
+			n = False
+
+		if n == True:
+			ip = ip + s
+		elif n == False and s != ":":
+			port = port + s
+else:
+	try:
+		client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		client.connect((ip_dns, port_dns))
+
+		client.send(host.encode("utf-8"))
+
+		message = client.recv(1024).decode("utf-8")
+
+		if message == "REQUEST=DOMAIN_NOT_FOUND":
+			print("Ошибка! Доменное имя не найдено.")
+
+			sys.exit()
+
+		n = True
+
+		for s in message:
+		if s == ":":
+			n = False
+
+		if n == True:
+			ip = ip + s
+		elif n == False and s != ":":
+			port = port + s
+	except:
+		print("Ошибка! Невозможно подключится к DNS серверу. Попробуйте ввести айпи адрес в цифровом виде.")
+
+		sys.exit()
 
 def receive(client):
 	global status
